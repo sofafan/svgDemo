@@ -406,22 +406,19 @@
 	    ]
     }];
 
-
     let canvas = document.querySelector('#svg-canvas')
+	    , initHeight = 800
+	    , initWidth = 1000
         , svgNode = createSvg()
         , nodeArr = []
         , treeDepth = 0
-        , positionArr = initPosition();
-        , svgHeight = getSvgHeight()
+        , initLevel = 0
         , textFontSize = 22     //文字大小
-        , textRectStyle = {     //文字节点大小
-    	    height: 30,
-            width: 120
-        }
+        , textRectHeight = 30    //文字节点大小
+        , textRectWidth = 120
         , btnNodeRadious = 5    //点击按钮半径大小
         , lineNodeWidth = 200   //点击按钮间的距离大小
     ;
-
 
     //计算树层级
     (function getTreeDepth(data, depth) {
@@ -435,18 +432,10 @@
 	    }
     })(svgData, treeDepth);
 
+    getPosition([], svgData, nodeArr, initLevel);
 
-    //计算节点位置层次
-    (function (data) {
-
-    })(svgData);
-
+    //添加节点
     canvas.append(svgNode);
-
-
-
-
-
 
 
     //===============================================================函数方法===============================================================
@@ -456,8 +445,8 @@
      */
     function createSvg() {
 	    let svg = document.createElementNS(SVG_NS, 'svg');
-	    svg.setAttribute('width', '100%');
-	    svg.setAttribute('height', '100%');
+	    svg.setAttribute('width', initWidth);
+	    svg.setAttribute('height', initWidth);
 
 	    return svg;
     }
@@ -484,10 +473,92 @@
 	    return svgElement;
     }
 
+    /**
+     * 初始化展示节点的位置
+     */
+    function getPosition(parentData, data, arr, level) {
+
+    	//获取初始位置
+        initPosition(parentData, data, arr, level);
+        console.log(nodeArr);
+	    confirmPosition(nodeArr);
+//        nodeArr.forEach(function (item, index) {
+//           if(item.level === 0){
+//
+//           }
+//        });
+    }
+
+
    /**
-    * 获取展示节点的位置
+    * 初始化展示节点的位置
     */
-   function initPosition() {
+   function initPosition(parentData, data, arr, level) {
+       for(let index = 0; index < data.length; index++) {
+	   	    let item = data[index]
+                , positionItem = {}
+                ;
+            if(level === 0){
+            	Object.assign(positionItem, {
+            		range: [0, initHeight],
+                    verticalCenterPoint: initHeight / 2,
+                    level: level,
+                    name: item.name,
+                    height: initHeight,
+                    children: [],
+                    parent: null,
+                });
+            }
+            else if(level === 1){
+            	let itemHeight = initHeight / data.length;
+            	Object.assign(positionItem, {
+		            range: [itemHeight * index, itemHeight * (index + 1)],
+		            verticalCenterPoint: itemHeight * index + itemHeight / 2,
+		            level: level,
+		            name: item.name,
+                    height: itemHeight,
+		            children: [],
+                    parent: parentData
+                })
+            }
+            else{
+            	//从树图第三阶段开始需要重新计算整体的高度的变化，展开的过大之后以较高的点抵到高度为0的时候
+                //根据几种可能性分开去进行计算
+                //同时还需要使之前的节点的位置发生改变
+	            Object.assign(positionItem, {
+		            range: [],
+		            verticalCenterPoint: 0,
+		            level: level,
+		            name: item.name,
+                    height: textRectHeight,
+		            children: [],
+                    parent: parentData,
+	            })
+            }
+		   if(item.hasOwnProperty('children') && item.children.length){
+			   arr.push(positionItem);
+			   initPosition(positionItem, item.children, positionItem.children, positionItem.level + 1);
+		   }
+	   }
+   }
+
+   let levelsHeight = {
+
+   };
+   function confirmPosition(arr) {
+   	    if()
+       arr.forEach(function (item, index) {
+            if(item.level === 0){
+            	if(item.hasOwnProperty('children') && item.children.length !== 0){
+            		confirmPosition(item.children);
+                }
+            }
+            else{
+                if(arr.length * textRectHeight > arr[0].parent.height){
+	                arr[0].parent.height = arr.length * textRectHeight;
+                }
+            }
+       });
 
    }
 
