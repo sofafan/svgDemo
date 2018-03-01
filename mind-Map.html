@@ -413,12 +413,14 @@
         , nodeArr = []
         , treeDepth = 0
         , initLevel = 0
-        , textFontSize = 22     //文字大小
-        , textRectHeight = 30    //文字节点大小
+        , textFontSize = 16     //文字大小
+        , textRectHeight = 20    //文字节点大小
         , textRectWidth = 120
         , btnNodeRadious = 5    //点击按钮半径大小
         , lineNodeWidth = 200   //点击按钮间的距离大小
+        , levelHeight = {}      //设置每个层级的高度最后大小
     ;
+
 
     //计算树层级
     (function getTreeDepth(data, depth) {
@@ -432,7 +434,17 @@
 	    }
     })(svgData, treeDepth);
 
-    getPosition([], svgData, nodeArr, initLevel);
+    //初始层级高度范围
+//    (function (obj) {
+//        for(let i = 0; i < treeDepth; i++){
+//        	obj['level' + i] = 0;
+//        }
+//    })(levelHeight);
+
+    getPosition(svgData, nodeArr);
+
+    //绘画逻辑
+    initDraw(nodeArr, svgNode);
 
     //添加节点
     canvas.append(svgNode);
@@ -441,15 +453,160 @@
     //===============================================================函数方法===============================================================
     /**
      * 创建SVG节点
-     * @return {Element}
+     * @return {Element} 创建完成的SVG节点
      */
     function createSvg() {
 	    let svg = document.createElementNS(SVG_NS, 'svg');
 	    svg.setAttribute('width', initWidth);
-	    svg.setAttribute('height', initWidth);
+	    svg.setAttribute('height', initHeight);
+	    svg.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+	    svg.setAttribute('version', "1.1");
 
 	    return svg;
     }
+
+    /**
+     * 初始化展示节点的位置
+     * @param data {Array} 树原数据
+     * @param arr {Array} 处理的数据
+     */
+    function getPosition(data, arr) {
+    	//获取初始位置
+        initPosition([], data, arr, 0);
+
+        //确认节点高度
+	    confirmItemHeight(arr);
+
+        //确定各个节点的位置
+        setNodeHeight(arr);
+
+	    //设置SVG的高度和宽度
+	    svgNode.setAttribute('height', arr[0].height);
+
+    }
+
+    function initDraw(arr, svgNode) {
+	    drawPoint(arr, svgNode);
+	    drawLine(arr, svgNode);
+    }
+
+
+   /**
+    * 初始化展示节点的位置
+    * @param parentData {Object} 父节点
+    * @param data {Array} 当前节点同级节点合集
+    * @param arr {Object} 当前节点上级节点添加的子集节点
+    * @param level {number} 当前的节点级别
+    */
+   function initPosition(parentData, data, arr, level) {
+       for(let index = 0; index < data.length; index++) {
+	   	    let item = data[index]
+                , positionItem = {}
+                ;
+
+	       Object.assign(positionItem, {
+		       range: [],
+		       verticalCenterPoint: 0,
+		       level: level,
+		       name: item.name,
+		       height: textRectHeight,
+		       children: [],
+		       parent: parentData,
+	       });
+	       arr.push(positionItem);
+		   if(item.hasOwnProperty('children') && item.children.length){
+			   initPosition(positionItem, item.children, positionItem.children, positionItem.level + 1);
+		   }
+	   }
+   }
+
+
+    /**
+     * 确认节点高度
+     * @param arr{Array} 单个节点的子节点
+     */
+   function confirmItemHeight(arr) {
+       arr.forEach(function (item) {
+           setParentHeight(item.level, item);
+           if(item.hasOwnProperty('children') && item.children.length !== 0){
+	           confirmItemHeight(item.children);
+           }
+       })
+   }
+
+
+   /**
+    * 设置父级节点的高度
+    * @param level {number} 当前的层级
+    * @param item {Object} 当前的节点
+    */
+   function setParentHeight(level, item) {
+       let heightContent = 0;
+       if(level !== 0){
+           item.parent.children.forEach(function (node) {
+               heightContent += node.height;
+           });
+           item.parent.height = heightContent;
+           setParentHeight(level -1, item.parent);
+       }
+   }
+
+   /**
+    * 設置節高度範圍和其中心點位置
+    * @param arr {Array} 需要计算的数组
+    */
+   function setNodeHeight(arr) {
+       let initHeight = arr[0].level === 0 ? 0 : arr[0].parent.range[0];
+       arr.forEach(function (item) {
+           item.range = [initHeight, initHeight + item.height];
+           item.verticalCenterPoint = initHeight + item.height / 2;
+           initHeight += item.height;
+           if(item.hasOwnProperty('children') && item.children.length !==0){
+	           setNodeHeight(item.children);
+           }
+       });
+   }
+
+   function drawPoint(arr, node){
+       arr.forEach(function (item, index) {
+           let pointNode = create('circle', {
+               'cx': item.level * lineNodeWidth + 10,
+               'cy': item.verticalCenterPoint,
+               'r': 5,
+               'stroke': 'blue',
+               'sttoke-width': '2',
+               'fill': 'red',
+           });
+
+           node.appendChild(pointNode);
+           if(item.hasOwnProperty('children') && item.children.length !== 0){
+               drawPoint(item.children, node);
+           }
+       });
+   }
+
+   function drawLine(arr, node) {
+       if(arr[0].level !== 0){
+	       arr.forEach(function (item, index) {
+		       let lineNode = create('path', {
+			       'd': `M ${item.parent.level * lineNodeWidth + 10} ${item.parent.verticalCenterPoint} L ${item.level * lineNodeWidth + 10} ${item.verticalCenterPoint}`,
+                   'stroke': 'grey',
+                   'stroke-width': '3',
+		       });
+
+		       node.appendChild(lineNode);
+		       if(item.hasOwnProperty('children') && item.children.length !== 0){
+			       drawLine(item.children, node);
+		       }
+	       });
+       }
+       else{
+	       if(arr[0].hasOwnProperty('children') && arr[0].children.length !== 0){
+		       drawLine(arr[0].children, node);
+	       }
+       }
+
+   }
 
     /**
      * 创建svg相关元素
@@ -462,111 +619,16 @@
 
 	    let svgElement = document.createElementNS(SVG_NS, tag);
 	    for(let key in attr) {
-		    switch(key) {
-			    case 'xlink:href'://文本路径添加属性特有
-				    svgElement[0].setAttributeNS('http://www.w3.org/1999/xlink', key, attr[key]);
-				    break;
-			    default:
-				    svgElement.setAttributeNS('http://www.w3.org/1999/xlink', key, attr[key]);
-		    }
+//		    switch(key) {
+//			    case 'xlink:href'://文本路径添加属性特有
+//				    svgElement[0].setAttributeNS('http://www.w3.org/1999/xlink', key, attr[key]);
+//				    break;
+//			    default:
+//				    svgElement.setAttributeNS('http://www.w3.org/1999/xlink', key, attr[key]);
+//		    }
+		    svgElement.setAttribute(key, attr[key]);
 	    }
 	    return svgElement;
-    }
-
-    /**
-     * 初始化展示节点的位置
-     */
-    function getPosition(parentData, data, arr, level) {
-
-    	//获取初始位置
-        initPosition(parentData, data, arr, level);
-        console.log(nodeArr);
-	    confirmPosition(nodeArr);
-//        nodeArr.forEach(function (item, index) {
-//           if(item.level === 0){
-//
-//           }
-//        });
-    }
-
-
-   /**
-    * 初始化展示节点的位置
-    */
-   function initPosition(parentData, data, arr, level) {
-       for(let index = 0; index < data.length; index++) {
-	   	    let item = data[index]
-                , positionItem = {}
-                ;
-            if(level === 0){
-            	Object.assign(positionItem, {
-            		range: [0, initHeight],
-                    verticalCenterPoint: initHeight / 2,
-                    level: level,
-                    name: item.name,
-                    height: initHeight,
-                    children: [],
-                    parent: null,
-                });
-            }
-            else if(level === 1){
-            	let itemHeight = initHeight / data.length;
-            	Object.assign(positionItem, {
-		            range: [itemHeight * index, itemHeight * (index + 1)],
-		            verticalCenterPoint: itemHeight * index + itemHeight / 2,
-		            level: level,
-		            name: item.name,
-                    height: itemHeight,
-		            children: [],
-                    parent: parentData
-                })
-            }
-            else{
-            	//从树图第三阶段开始需要重新计算整体的高度的变化，展开的过大之后以较高的点抵到高度为0的时候
-                //根据几种可能性分开去进行计算
-                //同时还需要使之前的节点的位置发生改变
-	            Object.assign(positionItem, {
-		            range: [],
-		            verticalCenterPoint: 0,
-		            level: level,
-		            name: item.name,
-                    height: textRectHeight,
-		            children: [],
-                    parent: parentData,
-	            })
-            }
-		   if(item.hasOwnProperty('children') && item.children.length){
-			   arr.push(positionItem);
-			   initPosition(positionItem, item.children, positionItem.children, positionItem.level + 1);
-		   }
-	   }
-   }
-
-   let levelsHeight = {
-
-   };
-   function confirmPosition(arr) {
-   	    if()
-       arr.forEach(function (item, index) {
-            if(item.level === 0){
-            	if(item.hasOwnProperty('children') && item.children.length !== 0){
-            		confirmPosition(item.children);
-                }
-            }
-            else{
-                if(arr.length * textRectHeight > arr[0].parent.height){
-	                arr[0].parent.height = arr.length * textRectHeight;
-                }
-            }
-       });
-
-   }
-
-    /**
-     * 获取svg的高度大小
-     */
-    function getSvgHeight() {
-
     }
 </script>
 </html>
