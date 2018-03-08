@@ -12,7 +12,7 @@
             height: 100%;
         }
         #svg-canvas{
-            border:1px solid red;
+            /*border:1px solid red;*/
             width: 100%;
         }
     </style>
@@ -413,8 +413,8 @@
         , nodeArr = []
         , treeDepth = 0
         , initLevel = 0
-        , textFontSize = 16     //文字大小
-        , textRectHeight = 20    //文字节点大小
+        , textFontSize = 12     //文字大小
+        , textRectHeight = 12    //文字节点大小
         , textRectWidth = 120
         , btnNodeRadious = 5    //点击按钮半径大小
         , lineNodeWidth = 200   //点击按钮间的距离大小
@@ -487,6 +487,9 @@
 
     function initDraw(arr, svgNode) {
 	    drawPoint(arr, svgNode);
+
+
+
 	    drawLine(arr, svgNode);
     }
 
@@ -573,9 +576,9 @@
                'cx': item.level * lineNodeWidth + 10,
                'cy': item.verticalCenterPoint,
                'r': 5,
-               'stroke': 'blue',
-               'sttoke-width': '2',
-               'fill': 'red',
+               'stroke': '#df6070',
+               'stroke-width': '1',
+               'fill': 'transparent',
            });
 
            node.appendChild(pointNode);
@@ -587,11 +590,13 @@
 
    function drawLine(arr, node) {
        if(arr[0].level !== 0){
-	       arr.forEach(function (item, index) {
-		       let lineNode = create('path', {
-			       'd': `M ${item.parent.level * lineNodeWidth + 10} ${item.parent.verticalCenterPoint} L ${item.level * lineNodeWidth + 10} ${item.verticalCenterPoint}`,
-                   'stroke': 'grey',
-                   'stroke-width': '3',
+	       arr.forEach(function (item) {
+		       let controlPoint = getControlPoint(item)
+                   , lineNode = create('path', {
+                   'd': `M ${item.parent.level * lineNodeWidth + 10} ${item.parent.verticalCenterPoint} Q ${controlPoint[0]} ${controlPoint[1]} ${item.level * lineNodeWidth + 5} ${item.verticalCenterPoint}`,
+                   'stroke': '#ccc',
+                   'stroke-width': '1',
+                   'fill': 'none'
 		       });
 
 		       node.appendChild(lineNode);
@@ -605,7 +610,25 @@
 		       drawLine(arr[0].children, node);
 	       }
        }
+   }
 
+    /**
+     * 获取控制点
+     * @ param item {Object} 节点信息
+     */
+   function getControlPoint(item) {
+       let childPoint = item.verticalCenterPoint
+           , parentPoint = item.parent.verticalCenterPoint
+           , controlPoint = []
+       ;
+       if(childPoint > parentPoint){
+           controlPoint = [(item.level - 1) * lineNodeWidth + lineNodeWidth / 3, childPoint - ((childPoint - parentPoint) / 6)];
+       }
+       else{
+	       controlPoint = [(item.level - 1) * lineNodeWidth + lineNodeWidth / 3, childPoint + ((parentPoint - childPoint) / 6)]
+       }
+
+       return controlPoint;
    }
 
     /**

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+	let a = [[2,7], [1,5], [1,9], [6,10]]
+		, b = [[5,4],[5,7],[5,8],[5,9]]
+		, c = [[2,4,8],[1,6,8],[5,9,8],[3,10,8]]
+		, d = [[2,3,4],[2,3,6],[2,4,6],[3,4,6]]
+		, result
+	;
+	let arr = []
+        , arrAll = []
+    ;
+	a.forEach(function (aItem,a) {
+		let farr = aItem;
+		b.forEach(function (bItem,b) {
+			farr = mixArr(aItem, bItem);
+			c.forEach(function (cItem,c) {
+				farr = mixArr(farr, cItem);
+				d.forEach(function (dItem, d) {
+					arr = [];
+					farr = mixArr(farr, dItem);
+
+					arr.push(farr);
+					arr.push(`${a}-${b}-${c}-${d}`);
+					arrAll.push(arr);
+
+				})
+			})
+		});
+	});
+//    console.log(arrAll);
+	let arrNeed = [];
+
+	arrAll.forEach(function (item) {
+		let flag = true;
+
+		if(item.length === 3 && (item[0].length === 3 && item[1].length === 3)){
+			flag = false;
+        }
+        let string = item[item.length - 1];
+        item.splice(item.length - 1, 1);
+        item.forEach(function (ad, index) {
+	        if(ad.length > 5){
+                flag = false;
+            }
+        });
+
+
+        if(flag){
+        	item.push(string);
+        	arrNeed.push(item);
+        }
+	});
+
+	console.log(arrNeed);
+
+	function mixArr(arr01, arr02) {
+		let flag = false;
+		arr01.forEach(function (aItem, index) {
+			arr02.forEach(function (bItem) {
+				if(aItem === bItem){
+					arr01 = arr01.concat(arr02);
+					arr01 = uniq(arr01);
+					flag = true;
+				}
+			})
+		});
+
+        if(!flag){
+        	arr.push(arr02);
+        }
+
+		return arr01;
+	}
+
+
+	// 最简单数组去重法
+    /*
+     * 新建一新数组，遍历传入数组，值不在新数组就push进该新数组中
+     * IE8以下不支持数组的indexOf方法
+     * */
+	function uniq(array){
+		var temp = []; //一个新的临时数组
+		for(var i = 0; i < array.length; i++){
+			if(temp.indexOf(array[i]) == -1){
+				temp.push(array[i]);
+			}
+		}
+		return temp;
+	}
+</script>
+</body>
+</html>

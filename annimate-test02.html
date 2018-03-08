@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text</title>
+    <style>
+        svg{
+            border:1px solid red;
+        }
+        path {
+
+        }
+
+        @keyframes dash {
+            from {
+                stroke-dashoffset: 0;
+            }
+            to {
+                stroke-dashoffset: 10000;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1000" height="900">
+        <g transform="translate(45, 45)">
+            <circle id='startPoint' cx="5" cy="5" r="5" stroke="black" fill="#ccc" ></circle>
+            <circle id='startPoint02' cx="55" cy="55" r="5" stroke="black" fill="#ccc" ></circle>
+            <g id="mustSussess">
+                <circle id='endPoint' cx="455" cy="455" r="5" stroke="red" fill="none"></circle>
+
+                <path id='pathNode' d="M10 5 Q 255 55 455 450" fill="none" stroke="#ccc" stroke-width="2">
+                    <!--<animate-->
+                        <!--attributeName="d"-->
+                        <!--attributeType="XML"-->
+                        <!--from="M10 5 Q 255 55 455 450"-->
+                        <!--to="M10 5 Q 10 5 10 5"-->
+                        <!--dur="0.5s"-->
+                        <!--fill="freeze"-->
+                    <!--&gt;</animate>-->
+                </path>
+
+                <circle id='endPoint' cx="505" cy="50" r="5" stroke="red" fill="none"></circle>
+                <path id='pathNode02' d="M60 55 Q 305 105 505 50" fill="none" stroke="#ccc" stroke-width="2">
+
+                </path>
+
+
+
+
+            </g>
+        </g>
+
+
+    </svg>
+
+    <script>
+        let start = document.querySelector('#startPoint')
+            , start02 = document.querySelector('#startPoint02')
+            , end = document.querySelector('#endPoint')
+            , path = document.querySelector('#pathNode')
+            , path05 = document.querySelector('#pathNode02')
+            , length = path.getTotalLength()
+            , d = document.querySelector('.doc')
+            , m = document.querySelector('#mustSussess')
+            , rect = document.querySelector('#testRect')
+	        , dAni = addAnimate({
+		        'attributeName':'d',
+		        'attributeType':'XML',
+		        'from':'M10 5 Q 255 55 455 450',
+		        'to':'M10 5 Q 10 5 10 5',
+		        'dur':'2s',
+		        'fill':'freeze',
+	        })
+	        , dAni02 = addAnimate({
+		        'attributeName':'d',
+		        'attributeType':'XML',
+		        'from':'M60 55 Q 305 105 505 50',
+		        'to':'M60 55 Q 60 55 60 55',
+		        'dur':'2s',
+		        'fill':'freeze',
+	        })
+        ;
+//        path.appendChild(dAni);
+//        path05.appendChild(dAni02);
+        start02.onclick = () => {
+
+        };
+
+        start.onclick = () => {
+	        path.appendChild(dAni);
+	        path05.appendChild(dAni02);
+
+	        path.style.cssText = `stroke-dasharray: 10000;
+            stroke-dashoffset: 10000;
+            animation: dash 0.5s linear alternate ;
+            animation-direction: normal;`;
+
+	        let b = document.createElementNS("http://www.w3.org/2000/svg","animate");
+	        b.setAttributeNS(null, 'attributeName', 'opacity');
+	        b.setAttributeNS(null, 'attributeType', 'XML');
+	        b.setAttributeNS(null, 'from', '1');
+	        b.setAttributeNS(null, 'to', '0');
+	        b.setAttributeNS(null, 'dur', '0.1s');
+	        b.setAttributeNS(null, 'fill', 'freeze');
+
+	        end.appendChild(b);
+
+        };
+
+        function addAnimate(obj) {
+            let a = document.createElementNS("http://www.w3.org/2000/svg","animate");
+            for(let key in obj){
+            	a.setAttributeNS(null, key, obj[key]);
+            }
+
+            return a;
+        }
+
+
+    </script>
+</body>
+</html>
