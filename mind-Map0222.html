@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        #svg-canvas, html, body{
+            height: 100%;
+        }
+        #svg-canvas{
+            /*border:1px solid red;*/
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="svg-canvas">
+
+</div>
+</body>
+<script>
+	const SVG_NS = 'http://www.w3.org/2000/svg';
+
+	const svgData = [{
+		"name": "flare",
+		"children": [
+			{
+				"name": "vis",
+				"children": [
+					{
+						"name": "axis",
+						"children": [
+							{"name": "Axes", "size": 1302},
+							{"name": "Axis", "size": 24593},
+							{"name": "AxisGridLine", "size": 652},
+							{"name": "AxisLabel", "size": 636},
+							{"name": "CartesianAxes", "size": 6703}
+						]
+					},
+					{
+						"name": "controls",
+						"children": [
+							{"name": "AnchorControl", "size": 2138},
+							{"name": "ClickControl", "size": 3824},
+							{"name": "Control", "size": 1353},
+							{"name": "ControlList", "size": 4665},
+							{"name": "DragControl", "size": 2649},
+							{"name": "ExpandControl", "size": 2832},
+							{"name": "HoverControl", "size": 4896},
+							{"name": "IControl", "size": 763},
+							{"name": "PanZoomControl", "size": 5222},
+							{"name": "SelectionControl", "size": 7862},
+							{"name": "TooltipControl", "size": 8435}
+						]
+					},
+					{
+						"name": "data",
+						"children": [
+							{"name": "Data", "size": 20544},
+							{"name": "DataList", "size": 19788},
+							{"name": "DataSprite", "size": 10349},
+							{"name": "EdgeSprite", "size": 3301},
+							{"name": "NodeSprite", "size": 19382},
+							{
+								"name": "render",
+								"children": [
+									{"name": "ArrowType", "size": 698},
+									{"name": "EdgeRenderer", "size": 5569},
+									{"name": "IRenderer", "size": 353},
+									{"name": "ShapeRenderer", "size": 2247}
+								]
+							},
+							{"name": "ScaleBinding", "size": 11275},
+							{"name": "Tree", "size": 7147},
+							{"name": "TreeBuilder", "size": 9930}
+						]
+					},
+					{
+						"name": "events",
+						"children": [
+							{"name": "DataEvent", "size": 2313},
+							{"name": "SelectionEvent", "size": 1880},
+							{"name": "TooltipEvent", "size": 1701},
+							{"name": "VisualizationEvent", "size": 1117}
+						]
+					},
+					{
+						"name": "legend",
+						"children": [
+							{"name": "Legend", "size": 20859},
+							{"name": "LegendItem", "size": 4614},
+							{"name": "LegendRange", "size": 10530}
+						]
+					},
+					{
+						"name": "operator",
+						"children": [
+							{
+								"name": "distortion",
+								"children": [
+									{"name": "BifocalDistortion", "size": 4461},
+									{"name": "Distortion", "size": 6314},
+									{"name": "FisheyeDistortion", "size": 3444}
+								]
+							},
+							{
+								"name": "encoder",
+								"children": [
+									{"name": "ColorEncoder", "size": 3179},
+									{"name": "Encoder", "size": 4060},
+									{"name": "PropertyEncoder", "size": 4138},
+									{"name": "ShapeEncoder", "size": 1690},
+									{"name": "SizeEncoder", "size": 1830}
+								]
+							},
+							{
+								"name": "filter",
+								"children": [
+									{"name": "FisheyeTreeFilter", "size": 5219},
+									{"name": "GraphDistanceFilter", "size": 3165},
+									{"name": "VisibilityFilter", "size": 3509}
+								]
+							},
+							{"name": "IOperator", "size": 1286},
+							{
+								"name": "label",
+								"children": [
+									{"name": "Labeler", "size": 9956},
+									{"name": "RadialLabeler", "size": 3899},
+									{"name": "StackedAreaLabeler", "size": 3202}
+								]
+							},
+							{
+								"name": "layout",
+								"children": [
+									{"name": "AxisLayout", "size": 6725},
+									{"name": "BundledEdgeRouter", "size": 3727},
+									{"name": "CircleLayout", "size": 9317},
+									{"name": "CirclePackingLayout", "size": 12003},
+									{"name": "DendrogramLayout", "size": 4853},
+									{"name": "ForceDirectedLayout", "size": 8411},
+									{"name": "IcicleTreeLayout", "size": 4864},
+									{"name": "IndentedTreeLayout", "size": 3174},
+									{"name": "Layout", "size": 7881},
+									{"name": "NodeLinkTreeLayout", "size": 12870},
+									{"name": "PieLayout", "size": 2728},
+									{"name": "RadialTreeLayout", "size": 12348},
+									{"name": "RandomLayout", "size": 870},
+									{"name": "StackedAreaLayout", "size": 9121},
+									{"name": "TreeMapLayout", "size": 9191}
+								]
+							},
+							{"name": "Operator", "size": 2490},
+							{"name": "OperatorList", "size": 5248},
+							{"name": "OperatorSequence", "size": 4190},
+							{"name": "OperatorSwitch", "size": 2581},
+							{"name": "SortOperator", "size": 2023}
+						]
+					},
+					{"name": "Visualization", "size": 16540}
+				]
+			}
+		]
+	}];
+
+	let canvas = document.querySelector('#svg-canvas')
+		, initHeight = 800
+		, initWidth = 1000
+		, svgNode = createSvg()
+		, nodeArr = []
+		, treeDepth = 0
+		, initLevel = 0
+        , aniTime = 500
+        , fps = 24
+        , interval = 1000 / fps
+        , aniTimes = aniTime / interval
+		, textFontSize = 12     //文字大小
+		, textRectHeight = 12    //文字节点大小
+		, textRectWidth = 120
+		, btnNodeRadious = 5    //点击按钮半径大小
+		, lineNodeWidth = 200   //点击按钮间的距离大小
+		, levelHeight = {}      //设置每个层级的高度最后大小
+	;
+
+
+	//计算树层级
+	(function getTreeDepth(data, depth) {
+		for (let v of data) {
+			if (v.hasOwnProperty('children') && v.children.length) {
+				if (depth + 1 > treeDepth){
+					treeDepth = depth + 1;
+				}
+				getTreeDepth(v.children, depth + 1);
+			}
+		}
+	})(svgData, treeDepth);
+
+
+	getPosition(svgData, nodeArr);
+
+	//绘画逻辑
+	initDraw(nodeArr, svgNode);
+
+	//添加节点
+	canvas.append(svgNode);
+
+
+	//===============================================================函数方法===============================================================
+	/**
+	 * 创建SVG节点
+	 * @return {Element} 创建完成的SVG节点
+	 */
+	function createSvg() {
+		let svg = document.createElementNS(SVG_NS, 'svg');
+		svg.setAttribute('width', initWidth);
+		svg.setAttribute('height', initHeight);
+		svg.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+		svg.setAttribute('version', "1.1");
+
+		return svg;
+	}
+
+	/**
+	 * 初始化展示节点的位置
+	 * @param data {Array} 树原数据
+	 * @param arr {Array} 处理的数据
+	 */
+	function getPosition(data, arr) {
+		//获取初始位置
+		initPosition([], data, arr, 0);
+
+		//确认节点高度
+		confirmItemHeight(arr);
+
+		//确定各个节点的位置
+		setNodeHeight(arr);
+
+
+		//设置SVG的高度和宽度
+        if(arr[0].height > initHeight){
+	        svgNode.setAttribute('height', arr[0].height);
+        }
+	}
+
+	function initDraw(arr, svgNode) {
+		drawTree(arr, svgNode);
+
+	}
+
+
+	/**
+	 * 初始化展示节点的位置
+	 * @param parentData {Object} 父节点
+	 * @param data {Array} 当前节点同级节点合集
+	 * @param arr {Object} 当前节点上级节点添加的子集节点
+	 * @param level {number} 当前的节点级别
+	 */
+	function initPosition(parentData, data, arr, level) {
+		for(let index = 0; index < data.length; index++) {
+			let item = data[index]
+				, positionItem = {}
+			;
+
+			Object.assign(positionItem, {
+				range: [],
+				verticalCenterPoint: 0,
+				level: level,
+				name: item.name,
+				height: textRectHeight,
+				children: [],
+				parent: parentData,
+                isExpand: true,
+			});
+
+			positionItem.nodeName = level === 0 ? "0" : parentData.nodeName + '-'+ index;
+
+			arr.push(positionItem);
+			if(item.hasOwnProperty('children') && item.children.length){
+				initPosition(positionItem, item.children, positionItem.children, positionItem.level + 1);
+			}
+		}
+	}
+
+
+	/**
+	 * 确认节点高度
+	 * @param arr{Array} 单个节点的子节点
+	 */
+	function confirmItemHeight(arr) {
+		arr.forEach(function (item) {
+			setParentHeight(item.level, item);
+			if(item.hasOwnProperty('children') && item.children.length !== 0 && item.isExpand){
+				confirmItemHeight(item.children);
+			}
+		})
+	}
+
+
+	/**
+	 * 设置父级节点的高度
+	 * @param level {number} 当前的层级
+	 * @param item {Object} 当前的节点
+	 */
+	function setParentHeight(level, item) {
+		let heightContent = 0;
+		if(level !== 0){
+			item.parent.children.forEach(function (node) {
+				heightContent += node.height;
+			});
+			item.parent.height = heightContent;
+			setParentHeight(level -1, item.parent);
+		}
+	}
+
+	/**
+	 * 設置節高度範圍和其中心點位置
+	 * @param arr {Array} 需要计算的数组
+	 */
+	function setNodeHeight(arr) {
+		let initHeight = arr[0].level === 0 ? 0 : arr[0].parent.range[0];
+		arr.forEach(function (item) {
+			item.range = [initHeight, initHeight + item.height];
+			item.verticalCenterPoint = initHeight + item.height / 2;
+			initHeight += item.height;
+			if(item.hasOwnProperty('children') && item.children.length !==0){
+				setNodeHeight(item.children);
+			}
+		});
+	}
+
+	function drawTree(arr, node) {
+		arr.forEach(function (item, index) {
+			let gNode = create('g',{
+					'class': item.nodeName,
+					'transform': `translate(${item.level * lineNodeWidth}, ${item.verticalCenterPoint})`
+				})
+                , pointNode = create('circle', {
+                    'cx': 10 ,
+                    'cy': 0,
+                    'r': 5,
+                    'stroke': '#df6070',
+                    'stroke-width': '1',
+                    'fill': item.isExpand ? 'transparent' : '#b1c4dd',
+                    'class': item.nodeName
+			})
+                , controlPoint = getControlPoint(item)
+                , lineNode
+            ;
+
+			//原点添加事件
+            pointNode.addEventListener('click', (e) => {
+            	let levelArr = e.target.classList[0].split('-')
+                    , item = getNodeItem(levelArr)
+                ;
+//                console.log(levelArr, item);
+                //单点信息折叠
+                expendFlexTree(item, e.target)
+            });
+
+			if(item.level !== 0){
+				lineNode = create('path', {
+					'd': `M ${item.parent.level * lineNodeWidth + 15} ${item.parent.verticalCenterPoint} Q ${controlPoint[0]} ${controlPoint[1]} ${item.level * lineNodeWidth + 5} ${item.verticalCenterPoint}`,
+					'stroke': '#ccc',
+					'stroke-width': '1',
+					'fill': 'none',
+                    'class':item.nodeName
+				});
+                node.appendChild(lineNode)
+            }
+
+            gNode.appendChild(pointNode);
+			node.appendChild(gNode);
+			if(item.hasOwnProperty('children') && item.children.length !== 0  && item.isExpand){
+				drawTree(item.children, node);
+			}
+		});
+
+	}
+
+
+	/**
+	 * 获取控制点
+	 * @ param item {Object} 节点信息
+	 */
+	function getControlPoint(item) {
+		let childPoint = item.verticalCenterPoint
+			, parentPoint = item.parent.verticalCenterPoint
+			, controlPoint = []
+		;
+		if(childPoint > parentPoint){
+			controlPoint = [(item.level - 1) * lineNodeWidth + lineNodeWidth / 3, childPoint - ((childPoint - parentPoint) / 6)];
+		}
+		else{
+			controlPoint = [(item.level - 1) * lineNodeWidth + lineNodeWidth / 3, childPoint + ((parentPoint - childPoint) / 6)]
+		}
+
+		return controlPoint;
+	}
+
+	/**
+     * 根据节点位置信息获取节点
+     * @param arr {Object} 节点位置信息
+     */
+	function getNodeItem(arr) {
+        let item = nodeArr;
+        for(let i = 0; i < arr.length;i++){
+        	if(i !== 0){
+        		item = item.children[parseInt(arr[i])]
+            }
+            else{
+		        item = item[parseInt(arr[i])];
+            }
+        }
+        return item;
+	}
+
+	/**
+     * 折叠数据
+     */
+	function expendFlexTree(item, node) {
+        //1.获取哪些要叠
+        //2.折叠的参数是什么
+        //3.注意清空
+        let nodeName = item.nodeName
+            , itemNode = getNodeItem(node.classList[0].split('-'))  //在数据中存储的节点
+            , pathArr = document.getElementsByTagName('path')
+            , initCount = 0
+	        , flexExpendArr = []
+	        , objArr = []
+        ;
+
+        item.isExpand = !item.isExpand;
+
+        for(let i = 0;i < pathArr.length;i++){
+        	let pathItem = pathArr[i]
+		        , aniObj = {
+			        count: 0,
+			        endPoint: [],
+			        startPoint: [],
+		            nowPoint: [],
+		            gapPoint: [],
+		        }
+                , gAniObj = {
+        		    type : 'g',
+                    count: 0,
+                    endPoint: [],
+                    startPoint: [],
+                    nowPoint: [],
+                    gapPoint: [],
+                }
+                , className = pathItem.classList
+            ;
+        	if(className.length !==0 && className[0].indexOf(nodeName) > -1 && isChildNode(nodeName, className[0])){
+		        flexExpendArr.push(pathArr[i]);
+		        aniObj.startPoint = pathArr[i].attributes['d'].value.split(' ');
+		        aniObj.endPoint = ['M',itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint, 'Q',itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint,itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint];
+		        aniObj.type = 'path';
+		        aniObj.aniType = item.isExpand ? 'expend' : 'flex'
+		        for(let i = 4; i <=7;i++){
+		        	aniObj.nowPoint.push(parseInt(aniObj.startPoint[i]));
+		        	aniObj.gapPoint.push((parseInt(aniObj.endPoint[i]) - parseInt(aniObj.startPoint[i])) / aniTimes);
+                }
+                console.log(aniObj.endPoint);
+		        objArr.push(aniObj);
+		        aniObj = {
+			        count: 0,
+			        endPoint: [],
+			        startPoint: [],
+			        nowPoint: [],
+			        gapPoint: [],
+		        }
+            }
+        }
+        window.flexExpendArr = flexExpendArr;
+        window.objArr = objArr;
+		console.log(flexExpendArr, objArr,'first');
+
+		requestAnimationFrame(update);
+		function update(){
+			flexExpendArr = window.flexExpendArr;
+			objArr = window.objArr;
+
+			objArr.forEach(function (item, index) {
+				let cPointX = item.nowPoint[0] + item.gapPoint[0]
+					, cPointY = item.nowPoint[1] + item.gapPoint[1]
+					, ePointX = item.nowPoint[2] + item.gapPoint[2]
+					, ePointY = item.nowPoint[3] + item.gapPoint[3]
+					, newPath = ['M', item.endPoint[1] ,item.endPoint[2], 'Q', cPointX, cPointY, ePointX, ePointY]
+				;
+                console.log(newPath);
+				item.nowPoint = [cPointX, cPointY, ePointX, ePointY];
+				flexExpendArr[index].setAttribute('d',newPath.join(' '))
+
+			});
+
+			initCount += 1;
+
+			if(initCount < aniTimes){
+				requestAnimationFrame(update);
+			}
+			else{
+				flexExpendArr.forEach(function (item, index) {
+					item.parentNode.removeChild(item);
+				});
+				window.flexExpendArr = [];
+				window.objArr = [];
+				objArr = [];
+				flexExpendArr = [];
+				initCount = 0;
+            }
+		}
+
+	}
+
+	function isChildNode(parentName, childName) {
+		let flag = true;
+		if(childName.length > parentName.length){
+			for(let i = 0; i <= parentName.length;i++){
+				if(i !== parentName.length){
+					if(childName[i] !== parentName[i]) flag = false;
+				}
+				else{
+					if(childName[i] !== '-') flag = false;
+				}
+			}
+        }
+        else{
+			flag = false;
+        }
+        return flag;
+	}
+
+	/**
+	 * 创建svg相关元素
+	 * @param tag   svg标签
+	 * @param attr  svg元素属性
+	 * @return {Element}
+	 */
+	function create(tag, attr) {
+		if(!document.createElementNS) return;//防止IE8报错
+
+		let svgElement = document.createElementNS(SVG_NS, tag);
+		for(let key in attr) {
+//		    switch(key) {
+//			    case 'xlink:href'://文本路径添加属性特有
+//				    svgElement[0].setAttributeNS('http://www.w3.org/1999/xlink', key, attr[key]);
+//				    break;
+//			    default:
+//				    svgElement.setAttributeNS('http://www.w3.org/1999/xlink', key, attr[key]);
+//		    }
+			svgElement.setAttribute(key, attr[key]);
+		}
+		return svgElement;
+	}
+</script>
+</html>
