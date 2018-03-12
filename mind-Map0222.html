@@ -175,7 +175,7 @@
 		, treeDepth = 0
 		, initLevel = 0
         , aniTime = 500
-        , fps = 24
+        , fps = 16
         , interval = 1000 / fps
         , aniTimes = aniTime / interval
 		, textFontSize = 12     //文字大小
@@ -428,16 +428,21 @@
         let nodeName = item.nodeName
             , itemNode = getNodeItem(node.classList[0].split('-'))  //在数据中存储的节点
             , pathArr = document.getElementsByTagName('path')
+            , gArr = document.getElementsByTagName('g')
             , initCount = 0
 	        , flexExpendArr = []
 	        , objArr = []
+            , gNodeArr = []
+            , gObjArr = []
         ;
 
         item.isExpand = !item.isExpand;
 
+
+        //处理路径数组
         for(let i = 0;i < pathArr.length;i++){
         	let pathItem = pathArr[i]
-		        , aniObj = {
+		        , pathObj = {
 			        count: 0,
 			        endPoint: [],
 			        startPoint: [],
@@ -455,18 +460,30 @@
                 , className = pathItem.classList
             ;
         	if(className.length !==0 && className[0].indexOf(nodeName) > -1 && isChildNode(nodeName, className[0])){
+        		let childItem = getNodeItem(className[0].split('-'))
+			        , controlPoint = !item.isExpand ? null : getControlPoint(childItem)
+                ;
+
 		        flexExpendArr.push(pathArr[i]);
-		        aniObj.startPoint = pathArr[i].attributes['d'].value.split(' ');
-		        aniObj.endPoint = ['M',itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint, 'Q',itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint,itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint];
-		        aniObj.type = 'path';
-		        aniObj.aniType = item.isExpand ? 'expend' : 'flex'
-		        for(let i = 4; i <=7;i++){
-		        	aniObj.nowPoint.push(parseInt(aniObj.startPoint[i]));
-		        	aniObj.gapPoint.push((parseInt(aniObj.endPoint[i]) - parseInt(aniObj.startPoint[i])) / aniTimes);
+		        pathObj.startPoint = pathArr[i].attributes['d'].value.split(' ');
+
+		        gAniObj.startPoint = [childItem.level * lineNodeWidth, childItem.verticalCenterPoint];
+
+        		if(!item.isExpand){
+			        pathObj.endPoint = ['M',itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint, 'Q',itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint,itemNode.level * lineNodeWidth + 15 ,itemNode.verticalCenterPoint];
+
+			        gAniObj.endPoint = [];
                 }
-                console.log(aniObj.endPoint);
-		        objArr.push(aniObj);
-		        aniObj = {
+                else{
+			        pathObj.endPoint = ['M',childItem.parent.level * lineNodeWidth + 15 ,childItem.parent.verticalCenterPoint, 'Q',controlPoint[0] ,controlPoint[1], childItem.level * lineNodeWidth + 5 , childItem.verticalCenterPoint];
+		        }
+
+		        for(let i = 4; i <=7;i++){
+		        	pathObj.nowPoint.push(parseInt(pathObj.startPoint[i]));
+		        	pathObj.gapPoint.push((parseInt(pathObj.endPoint[i]) - parseInt(pathObj.startPoint[i])) / aniTimes);
+                }
+		        objArr.push(pathObj);
+		        pathObj = {
 			        count: 0,
 			        endPoint: [],
 			        startPoint: [],
@@ -475,14 +492,69 @@
 		        }
             }
         }
+
+        //处理g节点
+		for(let i = 0;i < gArr.length;i++){
+			let className = gArr[i].classList
+				, gAniObj = {
+					count: 0,
+					endPoint: [],
+					startPoint: [],
+					nowPoint: [],
+					gapPoint: [],
+				}
+			;
+			if(className.length !==0 && className[0].indexOf(nodeName) > -1 && isChildNode(nodeName, className[0])){
+				let childItem = getNodeItem(className[0].split('-'))
+                    , startPoint = getTransformPoint(gArr[i].attributes['transform'].value)
+				;
+
+				gNodeArr.push(gArr[i]);
+
+				gAniObj.startPoint = [startPoint[0], startPoint[1]];
+
+				if(!item.isExpand){
+					gAniObj.endPoint = [itemNode.level * lineNodeWidth, itemNode.verticalCenterPoint];
+					gAniObj.startR = 5;
+					gAniObj.endR = 0;
+				}
+				else{
+					gAniObj.endPoint = [childItem.level * lineNodeWidth, childItem.verticalCenterPoint];
+					gAniObj.startR = 0;
+					gAniObj.endR = 5;
+				}
+
+				for(let i = 0; i <=1;i++){
+					gAniObj.gapPoint.push((gAniObj.endPoint[i] - gAniObj.startPoint[i]) / aniTimes);
+					gAniObj.nowPoint.push(gAniObj.startPoint[i]);
+				}
+				    gAniObj.gapR = (gAniObj.endR - gAniObj.startR) / aniTimes;
+				    gAniObj.nowR = gAniObj.startR;
+
+				gObjArr.push(gAniObj);
+				gAniObj = {
+					count: 0,
+					endPoint: [],
+					startPoint: [],
+					nowPoint: [],
+					gapPoint: [],
+				}
+			}
+		}
+        
         window.flexExpendArr = flexExpendArr;
         window.objArr = objArr;
+        window.gObjArr = gObjArr;
+        window.gNodeArr = gNodeArr;
 		console.log(flexExpendArr, objArr,'first');
 
 		requestAnimationFrame(update);
 		function update(){
-			flexExpendArr = window.flexExpendArr;
-			objArr = window.objArr;
+			let flexExpendArr = window.flexExpendArr
+                ,objArr = window.objArr
+                , gObjArr = window.gObjArr
+                , gNodeArr = window.gNodeArr
+            ;
 
 			objArr.forEach(function (item, index) {
 				let cPointX = item.nowPoint[0] + item.gapPoint[0]
@@ -491,10 +563,29 @@
 					, ePointY = item.nowPoint[3] + item.gapPoint[3]
 					, newPath = ['M', item.endPoint[1] ,item.endPoint[2], 'Q', cPointX, cPointY, ePointX, ePointY]
 				;
-                console.log(newPath);
-				item.nowPoint = [cPointX, cPointY, ePointX, ePointY];
-				flexExpendArr[index].setAttribute('d',newPath.join(' '))
 
+				item.nowPoint = [cPointX, cPointY, ePointX, ePointY];
+				flexExpendArr[index].setAttribute('d',newPath.join(' '));
+				cPointX = null;
+				cPointY = null;
+				ePointX = null;
+				ePointY = null;
+				newPath = [];
+			});
+
+			gObjArr.forEach(function (item, index) {
+				let pointX = item.nowPoint[0] + item.gapPoint[0]
+                    , pointY = item.nowPoint[1] + item.gapPoint[1]
+                    , r = item.nowR + item.gapR
+                    , transformStr = `translate(${pointX}, ${pointY})`
+                ;
+				item.nowR = r;
+				item.nowPoint = [pointX, pointY];
+				gNodeArr[index].setAttribute('transform', transformStr);
+				gNodeArr[index].children[0].setAttribute('r', r);
+				pointX = null;
+				pointY = null;
+				transformStr = null;
 			});
 
 			initCount += 1;
@@ -503,17 +594,28 @@
 				requestAnimationFrame(update);
 			}
 			else{
-				flexExpendArr.forEach(function (item, index) {
-					item.parentNode.removeChild(item);
-				});
 				window.flexExpendArr = [];
 				window.objArr = [];
+				window.gArr = [];
+				window.gObjArr = [];
+
 				objArr = [];
 				flexExpendArr = [];
+				gObjArr = [];
+				gArr = [];
 				initCount = 0;
             }
 		}
-
+	}
+	
+	function getTransformPoint(str) {
+		let num1 = str.split("(")  //["deleteChild", "236737)"]
+            , num2 = num1[1].split(")") //["236737", ""]
+            , result = num2[0].split(',')
+            , arr = []
+        ;
+        arr = [parseInt(result[0]), parseInt(result[1])];
+		return arr;
 	}
 
 	function isChildNode(parentName, childName) {
