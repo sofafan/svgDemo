@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script>
+    const treeData = [
+        {"id": "110000", "title": "半导体产品", "pid": 0, "level": 1,},
+        {"id": "110101", "title": "半导体设备", "pid": "110000", "level": 2},
+        {"id": "110102", "title": "半导体配件", "pid": "110000", "level": 2},
+        {"id": "110105", "title": "存储配件", "pid": "110000", "level": 2},
+        {"id": "110106", "title": "原材料", "pid": "110000", "level": 2},
+        {"id": "110107", "title": "周边产品", "pid": "110000", "level": 2},
+        {"id": "110108", "title": "电阻","pid": "110000", "level": 2},
+        {"id": "110109", "title": "电容", "pid": "110000", "level": 2},
+        {"id": "110111", "title": "电感","pid": "110000", "level": 2},
+        {"id": "110112", "title": "电位器","pid": "110000", "level": 2},
+        {"id": "110113", "title": "变压器","pid": "110000", "level": 2},
+        {"id": "110114", "title": "二极管","pid": "110000", "level": 2},
+        {"id": "110115", "title": "大兴区","pid": "110101", "level": 3},
+        {"id": "110116", "title": "怀柔区","pid": "110101", "level": 3},
+        {"id": "110117", "title": "平谷区","pid": "110101", "level": 3},
+        {"id": "110228", "title": "密云县","pid": "110101", "level": 3},
+        {"id": "110229", "title": "延庆县","pid": "110102", "level": 3},
+        {"id": "120101", "title": "和平区","pid": "110102", "level": 3},
+        {"id": "120102", "title": "河东区","pid": "110102", "level": 3},
+        {"id": "120103", "title": "河西区","pid": "110102", "level": 3},
+        {"id": "120104", "title": "南开区","pid": "110105", "level": 3},
+        {"id": "120105", "title": "河北区","pid": "110105", "level": 3},
+        {"id": "120106", "title": "红桥区","pid": "110105", "level": 3},
+        {"id": "120110", "title": "东丽区","pid": "110105", "level": 3},
+        {"id": "120111", "title": "西青区","pid": "110106", "level": 3},
+        {"id": "120112", "title": "津南区","pid": "110106", "level": 3},
+        {"id": "120113", "title": "北辰区","pid": "110106", "level": 3},
+        {"id": "120114", "title": "武清区","pid": "110107", "level": 3},
+        {"id": "120115", "title": "宝坻区","pid": "110107", "level": 3},
+        {"id": "120116", "title": "宝坻区","pid": "110107", "level": 3},
+        {"id": "120117", "title": "宝坻区","pid": "110107", "level": 3},
+        {"id": "120118", "title": "宝坻区","pid": "110108", "level": 3},
+        {"id": "120119", "title": "宝坻区","pid": "110108", "level": 3},
+        {"id": "120120", "title": "宝坻区","pid": "110108", "level": 3},
+        {"id": "120121", "title": "宝坻区","pid": "110109", "level": 3},
+        {"id": "120122", "title": "宝坻区","pid": "110109", "level": 3},
+        {"id": "120123", "title": "宝坻区","pid": "110111", "level": 3},
+        {"id": "120124", "title": "宝坻区","pid": "110111", "level": 3},
+        {"id": "120125", "title": "宝坻区","pid": "110111", "level": 3},
+        {"id": "120126", "title": "宝坻区","pid": "110112", "level": 3},
+        {"id": "120127", "title": "宝坻区","pid": "110112", "level": 3},
+        {"id": "120128", "title": "宝坻区","pid": "110112", "level": 3},
+        {"id": "120129", "title": "宝坻区","pid": "110113", "level": 3},
+        {"id": "120130", "title": "宝坻区","pid": "110113", "level": 3},
+        {"id": "120131", "title": "宝坻区","pid": "110114", "level": 3},
+	    {"id": "120132", "title": "宝坻区","pid": "110114", "level": 3},
+	    {"id": "120133", "title": "宝坻区","pid": "110114", "level": 3},
+        {"id": "120131", "title": "宝坻区","pid": "110117", "level": 4},
+	    {"id": "120132", "title": "宝坻区","pid": "110117", "level": 4},
+        {"id": "120133", "title": "宝坻区","pid": "110228", "level": 4},
+	    {"id": "120134", "title": "宝坻区","pid": "110228", "level": 4},
+        {"id": "120135", "title": "宝坻区","pid": "110229", "level": 4},
+	    {"id": "120136", "title": "宝坻区","pid": "110229", "level": 4},
+	    {"id": "120137", "title": "宝坻区","pid": "110229", "level": 4},
+	    {"id": "120138", "title": "宝坻区","pid": "120101", "level": 4},
+	    {"id": "120139", "title": "宝坻区","pid": "120101", "level": 4},
+	    {"id": "120140", "title": "宝坻区","pid": "120101", "level": 4},
+	    {"id": "120141", "title": "宝坻区","pid": "120101", "level": 4},
+        {"id": "120142", "title": "宝坻区","pid": "120106", "level": 4},
+	    {"id": "120143", "title": "宝坻区","pid": "120106", "level": 4},
+        {"id": "120144", "title": "宝坻区","pid": "120110", "level": 4},
+	    {"id": "120145", "title": "宝坻区","pid": "120110", "level": 4},
+        {"id": "120146", "title": "宝坻区","pid": "120111", "level": 4},
+	    {"id": "120147", "title": "宝坻区","pid": "120111", "level": 4},
+	    {"id": "120148", "title": "宝坻区","pid": "120111", "level": 4},
+        {"id": "120149", "title": "宝坻区","pid": "120114", "level": 4},
+	    {"id": "120150", "title": "宝坻区","pid": "120114", "level": 4},
+        {"id": "120151", "title": "宝坻区","pid": "120115", "level": 4},
+	    {"id": "120152", "title": "宝坻区","pid": "120115", "level": 4},
+        {"id": "120153", "title": "宝坻区","pid": "120119", "level": 4},
+	    {"id": "120154", "title": "宝坻区","pid": "120119", "level": 4},
+        {"id": "120155", "title": "宝坻区","pid": "120121", "level": 4},
+	    {"id": "120156", "title": "宝坻区","pid": "120121", "level": 4},
+	    {"id": "120157", "title": "宝坻区","pid": "120121", "level": 4},
+        {"id": "120158", "title": "宝坻区","pid": "120124", "level": 4},
+	    {"id": "120159", "title": "宝坻区","pid": "120124", "level": 4},
+	    {"id": "120160", "title": "宝坻区","pid": "120124", "level": 4},
+	    {"id": "120161", "title": "宝坻区","pid": "120124", "level": 4},
+        {"id": "120162", "title": "宝坻区","pid": "120127", "level": 4},
+	    {"id": "120163", "title": "宝坻区","pid": "120127", "level": 4},
+        {"id": "120164", "title": "宝坻区","pid": "120129", "level": 4},
+	    {"id": "120165", "title": "宝坻区","pid": "120129", "level": 4},
+	    {"id": "120166", "title": "宝坻区","pid": "120129", "level": 4},
+        {"id": "120167", "title": "宝坻区","pid": "120131", "level": 4},
+	    {"id": "120168", "title": "宝坻区","pid": "120131", "level": 4},
+    ]
+
+    let levelDepth = getLevelDepth(treeData)
+        ,levelObject = levelData(treeData)
+        , nodeObject = {}
+    ;
+
+    init(nodeObject);
+
+    //=======================================================处理方法=============================================
+    function init(obj) {
+        //获取初始位置
+	    initNode(obj, 1);
+    }
+
+
+    function initNode(obj) {
+    	let arr = {}
+            , rArr = []
+            ;
+        for(let i = levelDepth - 1; i > 0; i--){
+        	let nodeObj = [];
+	        arr['level' + i] = nodeObj;
+//            if(i === 1){
+//	            arr = nodeObj;
+//            }
+	        levelObject['level' + i].forEach(function (pItem) {
+                let obj = Object.assign({
+	                children:[]
+                }, pItem)
+                    , cArr = arr['level' + (i + 1)] ? arr : levelObject
+                ;
+
+                for(let j = 0; j < cArr['level' + (i + 1)].length; j++){
+                    let cItem = cArr['level' + (i + 1)][j]
+                    ;
+                    if(cItem.pid === pItem.id){
+                        let cObj = Object.assign({
+                            children:[]
+                        }, cItem);
+
+                        obj.children.push(cObj);
+                    }
+                }
+
+		        nodeObj.push(obj);
+	        });
+        }
+
+	    rArr = arr['level1'];
+
+        console.log(rArr);
+    }
+
+    /**
+     * 获取各个层级的的数据
+     * @param data
+     */
+    function levelData(data) {
+        let obj = {}
+        ;
+	    for(let i = 1; i <= levelDepth; i++){
+	    	obj['level' + i] = [];
+        }
+
+        data.forEach(function (item) {
+	        obj['level' + item.level].push(item)
+        });
+
+        return obj;
+    }
+
+    /**
+     * 获取整个节点的层级
+     * @param data
+     * @return {number}
+     */
+    function getLevelDepth(data) {
+        let levelDepth = 0;
+	    data.forEach(function (item) {
+           if(item.level > levelDepth){
+           	    levelDepth = item.level
+           }
+	    });
+
+	    return levelDepth;
+    }
+
+    //======================================================功能性方法============================================
+    function _typeOf(o) {
+        return Object.prototype.toString.call(o).slice(8, -1).replace(/^[A-Z]+/, function(m) {
+	        return m.length === 1 ? m.toLowerCase() : m.slice(0, -1).toLowerCase() + m.slice(-1);
+        });
+    }
+
+    function _clone(o) {
+        let type = _typeOf(o);
+        if(['number', 'string', 'boolean', 'null', 'undefined', 'regexp', 'function'].indexOf(type)>-1){
+            return o;
+        }else if(type === 'array'){
+	        let t = [];
+            for(let i=0, l=o.length; i<l; i++){
+                t.push(clone(o[i]))
+            }
+            return t
+        }else{
+	        let t = {};
+            for(let k in o){
+                t[k] = clone(o[k]);
+            }
+            return t
+        }
+    }
+</script>
+</body>
+</html>
