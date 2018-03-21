@@ -3,9 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+        #svg-canvas{
+            margin: 0 auto;
+            width: 1600px;
+            height: 900px;
+            border: 1px solid red;
+        }
+    </style>
+    <!--<meta http-equiv="Access-Control-Allow-Origin" content="*" />-->
 </head>
 <body>
+    <div id="svg-canvas">
 
+    </div>
 <script>
     const treeData = [
         {"id": "110000", "title": "半导体产品", "pid": 0, "level": 1,},
@@ -94,31 +105,48 @@
         {"id": "120167", "title": "宝坻区","pid": "120131", "level": 4},
 	    {"id": "120168", "title": "宝坻区","pid": "120131", "level": 4},
     ]
+        , SVG_NS = 'http://www.w3.org/2000/svg'
+    ;
 
     let levelDepth = getLevelDepth(treeData)
         ,levelObject = levelData(treeData)
-        , nodeObject = {}
+        , nodeObject = []
+	    , initHeight = 900
+	    , initWidth = 1600
+        , pathRadious
+        , canvas = document.querySelector('#svg-canvas')
+	    , svgNode = createSvg()
     ;
 
-    init(nodeObject);
+    nodeObject = init(nodeObject);
+    getJson('http://192.168.1.130:8080/mojing-server/cms/product/MM004/upstream?depth=1', function(data) {
+	    console.log(clone(data));
 
+    });
+
+    //添加节点
+    canvas.append(svgNode);
     //=======================================================处理方法=============================================
     function init(obj) {
         //获取初始位置
-	    initNode(obj, 1);
+	    obj = initNode(obj);
+
+	    //节点位置的布局
+	    initPosition(obj);
+
+        return obj
     }
 
-
+    /**
+     * 初始化节点
+     * @param obj 初始化数据
+     */
     function initNode(obj) {
     	let arr = {}
-            , rArr = []
             ;
         for(let i = levelDepth - 1; i > 0; i--){
         	let nodeObj = [];
 	        arr['level' + i] = nodeObj;
-//            if(i === 1){
-//	            arr = nodeObj;
-//            }
 	        levelObject['level' + i].forEach(function (pItem) {
                 let obj = Object.assign({
 	                children:[]
@@ -142,9 +170,13 @@
 	        });
         }
 
-	    rArr = arr['level1'];
+	    obj = arr['level1'];
 
-        console.log(rArr);
+        //
+
+	    obj = sortChildren(obj);
+
+        return obj;
     }
 
     /**
@@ -181,15 +213,217 @@
 	    return levelDepth;
     }
 
+    /**
+     * 对于当前数组子集内容进行排序
+     * @param obj
+     */
+    function sortChildren(obj) {
+        let levelFirst = obj[0].children
+            , leftArr = []
+            , rightArr = []
+            , isEven = obj[0].children.length % 2 === 0 //是否为偶数
+        ;
+
+	    bubbleSort(levelFirst, 'cl');
+
+	    //处理节点的左右排布
+	    for(let i = 0;i < levelFirst.length;i++){
+	    	let lastIndex = isEven ? levelFirst.length - 2 : levelFirst.length - 1;
+
+	    	//均匀分布两边内容
+            //处理最后两个结果值
+	    	if(i >= lastIndex){
+                let leftCount = getArrCount(leftArr)
+                    , rightCount = getArrCount(rightArr)
+                    , isLeftBig = leftCount > rightCount
+                ;
+
+                if(isEven){
+                	if(isLeftBig){
+                		if(i === levelFirst.length - 2){
+			                rightArr.push(levelFirst[i]);
+			                levelFirst[i].position = 'right';
+                        }
+                        else{
+			                leftArr.push(levelFirst[i]);
+			                levelFirst[i].position = 'left';
+                        }
+                    }
+                	else{
+		                if(i === levelFirst.length - 2){
+			                leftArr.push(levelFirst[i]);
+			                levelFirst[i].position = 'left';
+		                }
+		                else{
+			                rightArr.push(levelFirst[i]);
+			                levelFirst[i].position = 'right';
+		                }
+                    }
+                }
+                else{
+                	if(isLeftBig){
+		                rightArr.push(levelFirst[i]);
+		                levelFirst[i].position = 'right';
+                    }
+                    else{
+		                leftArr.push(levelFirst[i]);
+		                levelFirst[i].position = 'left';
+                    }
+                }
+            }
+            else{
+			    if(i % 2 === 0){
+				    leftArr.push(levelFirst[i]);
+				    levelFirst[i].position = 'left';
+			    }
+			    else{
+				    rightArr.push(levelFirst[i]);
+				    levelFirst[i].position = 'right';
+			    }
+            }
+        }
+
+        //子节点排序
+	    leftArr = childCountSort(leftArr);
+	    rightArr = childCountSort(rightArr);
+
+	    levelFirst = [];
+
+	    leftArr.forEach(function (item) {
+		    levelFirst.push(item);
+	    });
+
+	    rightArr.forEach(function (item) {
+		    levelFirst.push(item);
+	    });
+
+
+	    obj[0].children = levelFirst;
+        return obj
+    }
+
+    /**
+     * 子节点的排序
+     * @param arr  需要处理的数组
+     * @return arr  处理完整结果
+     */
+    function childCountSort(arr) {
+	    arr.forEach(function (item) {
+            item.childCount = getArrCount(item.children);
+	    });
+
+	    bubbleSort(arr, 'cc');
+
+	    //重新填充
+	    arr = bestSort(arr);
+
+	    arr.forEach(function (item) {
+            bubbleSort(item.children, 'cl');
+
+		    item.children = bestSort(item.children);
+	    });
+
+	    return arr;
+    }
+
+    /**
+     * 获取所有的子节点长度
+     * @param arr  处理的节点的长度
+     * @return count  子节点数目
+     */
+    function getArrCount(arr){
+	    let count = 0;
+	    for(let i = 0;i < arr.length;i++){
+		    count += arr[i].children.length;
+	    }
+
+	    return count;
+    }
+
+    /**
+     * 把数组进行排版最优排序
+     * @param arr  处理的数组
+     * @return count  子节点数目
+     */
+    function bestSort(arr) {
+        let cloneArr = clone(arr);
+	    arr = [];
+
+	    cloneArr.forEach(function (item, index) {
+		    if(index % 2 === 0){
+			    arr.push(item);
+		    }
+		    else{
+			    arr.unshift(item);
+		    }
+	    });
+
+	    return arr;
+    }
+
+    function initPosition(obj){
+        let textRectjHeight = 20
+            , leftArr = []
+            , rightArr = []
+        ;
+
+        obj[0].children.forEach(function (item) {
+        	let bigCount = Math.max(item.childCount , item.children.length)
+            ;
+
+        	item.height = bigCount * textRectjHeight;
+
+            if(item.position === 'left'){
+            	leftArr.push(item);
+            }
+            else{
+	            rightArr.push(item);
+            }
+
+            console.log(item);
+        });
+
+
+    }
+
+    /**
+     * 创建SVG节点
+     * @return {Element} 创建完成的SVG节点
+     */
+    function createSvg() {
+	    let svg = document.createElementNS(SVG_NS, 'svg');
+	    svg.setAttribute('width', initWidth);
+	    svg.setAttribute('height', initHeight);
+	    svg.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+	    svg.setAttribute('version', "1.1");
+
+	    return svg;
+    }
+
+    /**
+     * 创建svg相关元素
+     * @param tag   svg标签
+     * @param attr  svg元素属性
+     * @return {Element}
+     */
+    function create(tag, attr) {
+	    if(!document.createElementNS) return;//防止IE8报错
+
+	    let svgElement = document.createElementNS(SVG_NS, tag);
+	    for(let key in attr) {
+		    svgElement.setAttribute(key, attr[key]);
+	    }
+	    return svgElement;
+    }
     //======================================================功能性方法============================================
-    function _typeOf(o) {
+    function typeOf(o) {
         return Object.prototype.toString.call(o).slice(8, -1).replace(/^[A-Z]+/, function(m) {
 	        return m.length === 1 ? m.toLowerCase() : m.slice(0, -1).toLowerCase() + m.slice(-1);
         });
     }
 
-    function _clone(o) {
-        let type = _typeOf(o);
+    function clone(o) {
+        let type = typeOf(o);
         if(['number', 'string', 'boolean', 'null', 'undefined', 'regexp', 'function'].indexOf(type)>-1){
             return o;
         }else if(type === 'array'){
@@ -206,6 +440,101 @@
             return t
         }
     }
+
+    /**
+     * 冒泡排序
+     * @param arr {Object} 排序数组
+     * @param str {String} 排序的内容
+     * @return arr Object} 排序完成数组
+     */
+    function bubbleSort(arr, str) {
+        let len = arr.length;
+        for (let i = 0; i < len; i++) {
+            for (let j = 0; j < len - 1 - i; j++) {
+            	switch (str){
+                    case 'cl':
+	                    if (arr[j].children.length < arr[j+1].children.length) { //相邻元素两两对比
+		                    let temp = arr[j+1]; //元素交换
+		                    arr[j+1] = arr[j];
+		                    arr[j] = temp;
+	                    }
+	                    break;
+                    case 'cc':
+	                    if (arr[j].childCount < arr[j+1].childCount) { //相邻元素两两对比
+		                    let temp = arr[j+1]; //元素交换
+		                    arr[j+1] = arr[j];
+		                    arr[j] = temp;
+	                    }
+	                    break;
+                    default: break;
+                }
+            }
+        }
+        return arr;
+    }
+
+    function ajax(obj) {
+	    var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP")
+		    , op = {
+			    xhr: xhr
+			    , url: null
+			    , data: null
+			    , method: 'get'
+			    , dataType: 'jsonp'
+			    , async: true
+			    , callback:null
+		    }
+		    , tData = null
+	    ;
+	    for(var k in obj){
+		    op[k] = obj[k];
+	    }
+	    xhr.open(op.method.toUpperCase(), op.url, op.async);
+	    if(op.data){
+		    xhr.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+		    tData = []
+		    if(op.data){
+			    for(var i in op.data){
+				    tData.push(i+'='+encodeURIComponent(op.data[i]));
+			    }
+			    tData = tData.join('&');
+		    }
+	    }
+	    xhr.onreadystatechange = function(){
+		    if(typeof op.callback=='function'){
+			    if(xhr.readyState==4){
+				    var rs = false
+				    if(xhr.status==200){
+					    rs = xhr.responseText;
+				    }
+				    rs = op.rs = op.dataType=='json' ? JSON.parse(rs) : rs;
+				    op.callback.call(op, rs);
+			    }
+		    }
+	    };
+	    xhr.onerror = xhr.onabort = function(err){
+		    op.error = err;
+		    op.callback.call(op, false);
+	    };
+	    xhr.send(tData);
+    }
+
+    function get(url, fn){
+	    ajax({
+		    url: url
+		    , callback: fn
+	    });
+    }
+
+    function getJson(url, fn){
+	    ajax({
+		    url: url
+		    , dataType: 'json'
+		    , callback: fn
+	    });
+    }
+
+
 </script>
 </body>
 </html>
