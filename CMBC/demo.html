@@ -119,8 +119,10 @@
     ;
 
     nodeObject = init(nodeObject);
+    console.log('v');
     getJson('http://192.168.1.130:8080/mojing-server/cms/product/MM004/upstream?depth=1', function(data) {
-	    console.log(clone(data));
+    	console.log('a');
+	    console.log('a',clone(data));
 
     });
 
@@ -380,7 +382,7 @@
 	            rightArr.push(item);
             }
 
-            console.log(item);
+//            console.log(item);
         });
 
 
